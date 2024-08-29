@@ -19,7 +19,7 @@ export function cutFirst(str) {
   }
   
   export function keepFirstLast(str) {
-    if (str.length <= 2) {
+    if (str.length <= 3) {
       return str;
     }
     return keepFirst(str) + keepLast(str);
