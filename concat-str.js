@@ -1,3 +1,3 @@
-export function concatStr(str1, str2) {
-    return str1 + str2;
+export function concatStr(arg1, arg2) {
+    return String(arg1) + String(arg2);
   }
