@@ -13,5 +13,12 @@ export function round(number) {
   }
   
   export function trunc(number) {
-    return number < 0 ? -trunc(-number) : number - (number - floor(number));
+    if (number === 0) return 0;
+    if (number < 0) return -trunc(-number);
+    
+    let result = 0;
+    while (result + 1 <= number) {
+      result += 1;
+    }
+    return result;
   }
