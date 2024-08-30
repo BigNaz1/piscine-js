@@ -3,14 +3,7 @@ export function get(src, path) {
     let result = src;
     
     for (const key of keys) {
-      if (result == null) {
-        return undefined;
-      }
-      
-      if (typeof result[key] === 'function') {
-        return result[key].bind(result);
-      }
-      
+      if (result == null) return undefined;
       result = result[key];
     }
     
