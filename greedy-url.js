@@ -1,14 +1,14 @@
-export function getURL(dataSet) {
-    const urlRegex = /https?:\/\/\S+/g;
-    return dataSet.match(urlRegex) || [];
-  }
-  
-  export function greedyQuery(dataSet) {
-    const greedyRegex = /https?:\/\/\S+\?\S+(?:&\S+){2,}/g;
-    return dataSet.match(greedyRegex) || [];
-  }
-  
-  export function notSoGreedy(dataSet) {
-    const notSoGreedyRegex = /https?:\/\/\S+?\?(?:[^&=#]+(?:=[^&#]*)?&){1,2}[^&=#]+(?:=[^&#]*)?(?!&)/g;
-    return dataSet.match(notSoGreedyRegex) || [];
-  }
+function getURL(dataSet) {
+    const urlPattern = /https?:\/\/[^\s]+/g;
+    return dataSet.match(urlPattern) || [];
+}
+
+function greedyQuery(dataSet) {
+    const greedyPattern = /https?:\/\/[^\s\?#]+(\?[^#\s]*&[^#\s]*&[^#\s]*&[^\s#]*)/g;
+    return dataSet.match(greedyPattern) || [];
+}
+
+function notSoGreedy(dataSet) {
+    const notSoGreedyPattern = /https?:\/\/[^\s\?#]+(\?[^#\s]*&[^#\s]*&[^#\s]*)(?![^#\s]*&)/g;
+    return dataSet.match(notSoGreedyPattern) || [];
+}
