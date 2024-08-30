@@ -10,6 +10,10 @@ export function findIP(str) {
           return false;
         }
         
+        if (address === '0.0.0.0' && !port) {
+          return false;
+        }
+        
         if (port && (parseInt(port) > 65535 || port.startsWith('0'))) {
           return false;
         }
