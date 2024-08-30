@@ -13,7 +13,7 @@ export function findIP(str) {
 
         if (port) {
             const portNumber = parseInt(port, 10);
-            if (portNumber > 65535 || port.startsWith('0') || portNumber < 1) {
+            if (portNumber > 65535 || port.startsWith('0')) {
                 return false;
             }
         }
