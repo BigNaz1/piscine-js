@@ -9,6 +9,6 @@ export function getURL(dataSet) {
   }
   
   export function notSoGreedy(dataSet) {
-    const notSoGreedyRegex = /https?:\/\/\S+?\?(?:[^&\s]+=[^&\s]+)(?:&[^&\s]+=[^&\s]+){1,2}(?!&\S)/g;
+    const notSoGreedyRegex = /https?:\/\/\S+?\?(?:[^&=#]+(?:=[^&#]*)?&){1,2}[^&=#]+(?:=[^&#]*)?(?!&)/g;
     return dataSet.match(notSoGreedyRegex) || [];
   }
