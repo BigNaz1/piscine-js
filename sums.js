@@ -1,24 +1,23 @@
-export function sums(n) {
-    if (n === 0) return [];
-  
-    function generatePartitions(target, max, current = []) {
-      if (target === 0) {
-        return [current];
-      }
-      
-      let results = [];
-      for (let i = Math.min(max, target); i >= 1; i--) {
-        results = results.concat(generatePartitions(target - i, i, [...current, i]));
-      }
-      return results;
-    }
-  
-    return generatePartitions(n, n).sort((a, b) => {
-      for (let i = 0; i < Math.max(a.length, b.length); i++) {
-        if (a[i] !== b[i]) {
-          return a[i] - b[i];
+function sums(n) {
+    if (n <= 1) return [];
+    
+    const partitions = [];
+    
+    function generatePartitions(remaining, current = [], start = 1) {
+        if (remaining === 0) {
+            if (current.length > 1) {
+                partitions.push([...current]);
+            }
+            return;
         }
-      }
-      return 0;
-    });
-  }
+        
+        for (let i = start; i <= remaining; i++) {
+            current.push(i);
+            generatePartitions(remaining - i, current, i);
+            current.pop();
+        }
+    }
+    
+    generatePartitions(n);
+    return partitions;
+}
