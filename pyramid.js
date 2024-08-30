@@ -1,10 +1,13 @@
-export function pyramid(char, height) {
-    let result = '';
-    for (let i = 0; i < height; i++) {
-      const spaces = ' '.repeat(height - i - 1);
-      const chars = char.repeat(2 * i + 1);
-      result += spaces + chars;
-      if (i < height - 1) result += '\n';
+function pyramid(str, num) {
+  let x = ''
+  for (let i = 1; i <= num; i++) {
+    for (let j = i; j < num; j++) {
+      x += ' '.repeat(str.length)
     }
-    return result;
+    for (let k = 1; k < i * 2; k++) {
+      x += str
+    }
+    x += '\n'
   }
+  return x.slice(0, -1)
+}
