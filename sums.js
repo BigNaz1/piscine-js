@@ -1,4 +1,6 @@
 export function sums(n) {
+    if (n === 0) return [];
+  
     function generatePartitions(target, max, current = []) {
       if (target === 0) {
         return [current];
