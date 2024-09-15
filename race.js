@@ -17,30 +17,26 @@ function some(promises, count) {
             return;
         }
 
-        const results = [];
-        let resolved = 0;
-        let rejected = 0;
+        const results = new Array(promises.length).fill(undefined);
+        let resolvedCount = 0;
+        let settledCount = 0;
 
         promises.forEach((promise, index) => {
             Promise.resolve(promise)
                 .then(value => {
-                    if (resolved < count) {
+                    if (resolvedCount < count) {
                         results[index] = value;
-                        resolved++;
-                        if (resolved === count) {
-                            resolve(results.filter(result => result !== undefined));
+                        resolvedCount++;
+                        if (resolvedCount === count) {
+                            resolve(results.slice(0, promises.length));
                         }
                     }
                 })
-                .catch(() => {
-                    rejected++;
-                    if (rejected + resolved === promises.length && resolved < count) {
-                        resolve(results.filter(result => result !== undefined));
-                    }
-                })
+                .catch(() => {})
                 .finally(() => {
-                    if (rejected + resolved === promises.length) {
-                        resolve(results.filter(result => result !== undefined));
+                    settledCount++;
+                    if (settledCount === promises.length && resolvedCount < count) {
+                        resolve(results.slice(0, promises.length));
                     }
                 });
         });
