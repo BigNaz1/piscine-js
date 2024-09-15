@@ -7,7 +7,7 @@ function retry(count, callback) {
       } catch (error) {
         attempts++;
         if (attempts > count) {
-          throw new Error('Max retries reached');
+          return await callback(...args); // One last attempt
         }
       }
     }
