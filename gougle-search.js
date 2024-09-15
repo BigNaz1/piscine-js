@@ -1,34 +1,23 @@
 async function queryServers(serverName, q) {
-    const urls = [
-        `/${serverName}?q=${q}`,
-        `/${serverName}_backup?q=${q}`
-    ];
-    
-    return Promise.race(urls.map(getJSON));
+    var url = '/' + serverName + '?q=' + q;
+    var backupUrl = '/' + serverName + '_backup?q=' + q;
+    const req1 = getJSON(url);
+    const req2 = getJSON(backupUrl);
+    const res = await Promise.race([req1, req2]);
+    return res;
 }
 
 async function gougleSearch(q) {
-    const servers = ['web', 'image', 'video'];
-    
-    const searchPromise = Promise.all(
-        servers.map(async (server) => {
-            const result = await queryServers(server, q);
-            return [server, result];
-        })
-    ).then(Object.fromEntries);
+    var timeout = new Promise((resolve) =>
+        setTimeout(resolve, 80, Error('timeout'))
+    );
+    var web = queryServers('web', q),
+        image = queryServers('image', q),
+        video = queryServers('video', q);
 
-    const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('timeout')), 80);
-    });
-
-    try {
-        return await Promise.race([searchPromise, timeoutPromise]);
-    } catch (error) {
-        if (error.message === 'timeout') {
-            throw error;
-        }
-        // Handle other potential errors
-        console.error('An error occurred:', error);
-        throw error;
+    const res = await Promise.race([timeout, Promise.all([web, image, video])]);
+    if (res instanceof Error) {
+        throw res;
     }
+    return { image: res[1], video: res[2], web: res[0] };
 }
