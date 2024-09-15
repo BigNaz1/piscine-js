@@ -11,9 +11,9 @@ function race(promises) {
 }
 
 function some(promises, count) {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         if (promises.length === 0 || count === 0) {
-            resolve(undefined);
+            resolve([]);
             return;
         }
 
@@ -35,6 +35,11 @@ function some(promises, count) {
                 .catch(() => {
                     rejected++;
                     if (rejected + resolved === promises.length && resolved < count) {
+                        resolve(results.filter(result => result !== undefined));
+                    }
+                })
+                .finally(() => {
+                    if (rejected + resolved === promises.length) {
                         resolve(results.filter(result => result !== undefined));
                     }
                 });
