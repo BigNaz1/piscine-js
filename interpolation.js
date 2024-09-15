@@ -2,12 +2,19 @@ function interpolation({ step, start, end, callback, duration }) {
   const stepSize = (end - start) / step;
   const timeStep = duration / step;
 
-  for (let i = 0; i < step; i++) {
-    const distance = start + i * stepSize;
-    const point = i * timeStep;
+  let currentStep = 0;
 
-    setTimeout(() => {
+  function executeStep() {
+    if (currentStep < step) {
+      const distance = start + currentStep * stepSize;
+      const point = currentStep * timeStep;
+
       callback([distance, point]);
-    }, point);
+
+      currentStep++;
+      setTimeout(executeStep, timeStep);
+    }
   }
+
+  executeStep();
 }
