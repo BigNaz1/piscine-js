@@ -1,32 +1,21 @@
-function retry(count, callback) {
-  return async (...args) => {
-    let attempts = 0;
-    while (true) {
-      try {
-        return await callback(...args);
-      } catch (error) {
-        attempts++;
-        if (attempts > count) {
-          return await callback(...args); // One last attempt
+function retry(count = 3, callback = async () => {}) {
+    return async function (...args) {
+        if (count < 0) throw new Error('Retry count exceeded');
+        try {
+            return await callback(...args);
+        } catch (e) {
+            return retry(count - 1, callback)(...args);
         }
-      }
-    }
-  };
+    };
 }
 
-function timeout(delay, callback) {
-  return async (...args) => {
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('timeout')), delay);
-    });
-
-    try {
-      return await Promise.race([callback(...args), timeoutPromise]);
-    } catch (error) {
-      if (error.message === 'timeout') {
-        return error;
-      }
-      throw error;
-    }
-  };
+function timeout(delay = 0, callback = async () => {}) {
+    return async function (...args) {
+        const timeout = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('timeout')), delay)
+        );
+        const res = await Promise.race([timeout, callback(...args)]);
+        if (res instanceof Error) throw res;
+        return res;
+    };
 }
