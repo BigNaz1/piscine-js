@@ -1,22 +1,23 @@
-async function getJSON(path, params = {}) {
-  const url = new URL(path);
-  Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
+async function getJSON(path = '', params = {}) {
+    const queryString = Object.entries(params)
+        .map(([key, value]) => 
+            `${encodeURIComponent(key)}=${encodeURIComponent(value)}`
+        )
+        .join('&');
+    
+    const url = queryString ? `${path}?${queryString}` : path;
 
-  const response = await fetch(url);
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+        throw new Error(response.statusText);
+    }
 
-  if (!response.ok) {
-    throw new Error(response.statusText);
-  }
+    const res = await response.json();
 
-  const jsonData = await response.json();
+    if (res.error) {
+        throw new Error(res.error);
+    }
 
-  if (jsonData.error) {
-    throw new Error(jsonData.error);
-  }
-
-  if (jsonData.data !== undefined) {
-    return jsonData.data;
-  }
-
-  throw new Error('Invalid response format');
+    return res.data;
 }
