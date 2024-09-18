@@ -2,34 +2,35 @@ import http from 'http';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
 
+const HOST = 'localhost';
 const PORT = 5000;
+const GUESTS_DIR = 'guests';
+
+const ERROR_MESSAGES = {
+    NOT_FOUND: 'guest not found',
+    SERVER_ERROR: 'server failed'
+};
 
 const server = http.createServer(async (req, res) => {
     res.setHeader('Content-Type', 'application/json');
 
+    const guestName = req.url.slice(1);
+    const guestFile = join(GUESTS_DIR, `${guestName}.json`);
+
     try {
-        const guestName = req.url.slice(1); // Remove leading '/'
-        const filePath = join(process.cwd(), `${guestName}.json`);
-        
-        try {
-            const data = await readFile(filePath, 'utf8');
-            res.statusCode = 200;
-            res.end(data);
-        } catch (error) {
-            if (error.code === 'ENOENT') {
-                res.statusCode = 404;
-                res.end(JSON.stringify({ error: 'guest not found' }));
-            } else {
-                throw error; // Re-throw if it's not a 'file not found' error
-            }
-        }
-    } catch (error) {
-        console.error('Server error:', error);
-        res.statusCode = 500;
-        res.end(JSON.stringify({ error: 'server failed' }));
+        const data = await readFile(guestFile, 'utf8');
+        res.writeHead(200);
+        res.end(data);
+    } catch (err) {
+        const isNotFound = err.code === 'ENOENT';
+        const statusCode = isNotFound ? 404 : 500;
+        const errorMsg = isNotFound ? ERROR_MESSAGES.NOT_FOUND : ERROR_MESSAGES.SERVER_ERROR;
+
+        res.writeHead(statusCode);
+        res.end(JSON.stringify({ error: errorMsg }));
     }
 });
 
-server.listen(PORT, () => {
-    console.log(`Server listening on port ${PORT}`);
+server.listen(PORT, HOST, () => {
+    console.log(`Server is running on http://${HOST}:${PORT}`);
 });
