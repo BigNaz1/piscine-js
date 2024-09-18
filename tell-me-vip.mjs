@@ -1,35 +1,33 @@
-import { readdir, readFile, writeFile } from 'fs/promises';
-import { join } from 'path';
+import { readdir, readFile, writeFile } from "fs/promises";
+import { join } from "path";
 
-async function createVipList(dirPath) {
+const FILE_EXTENSION = '.json';
+const POSITIVE_ANSWER = 'yes';
+
+async function createVipList() {
     try {
-        const files = await readdir(dirPath);
-        const guestList = await Promise.all(files.map(async (file) => {
-            const filePath = join(dirPath, file);
-            const content = await readFile(filePath, 'utf8');
-            const guestInfo = JSON.parse(content);
-            const [lastName, firstName] = file.split('_');
-            return { 
-                name: `${lastName} ${firstName.slice(0, -4)}`,
-                answer: guestInfo.answer
-            };
-        }));
+        const path = process.argv[2] ?? '.';
+        const vips = (await Promise.all(
+            (await readdir(path))
+                .filter(file => file.endsWith(FILE_EXTENSION))
+                .map(async file => {
+                    const filePath = join(path, file);
+                    const data = JSON.parse(await readFile(filePath, 'utf8'));
+                    return data.answer.toLowerCase() === POSITIVE_ANSWER
+                        ? file.split('.')[0].split('_').reverse().join(' ')
+                        : null;
+                })
+        ))
+        .filter(Boolean)
+        .sort()
+        .map((guest, index) => `${index + 1}. ${guest}`)
+        .join('\n');
 
-        const vipGuests = guestList
-            .filter(guest => guest.answer === 'YES')
-            .map(guest => guest.name)
-            .sort((a, b) => a.localeCompare(b))
-            .map((guest, index) => `${index + 1}. ${guest}`)
-            .join('\n');
-
-        await writeFile('vip.txt', vipGuests);
+        await writeFile('vip.txt', vips);
         console.log('VIP list has been saved to vip.txt');
     } catch (error) {
-        console.error(`Error: ${error.message}`);
-        process.exit(1);
+        console.error('An error occurred while creating the VIP list:', error);
     }
 }
 
-const dirPath = process.argv[2] || process.cwd();
-
-createVipList(dirPath);
+createVipList();
