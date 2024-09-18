@@ -1,135 +1,94 @@
 import fs from 'fs/promises';
 import path from 'path';
 
-const commands = {
-  create: createFile,
-  delete: deleteFile,
-  add: addItem,
-  rm: removeItem,
-  help: showHelp,
-  ls: listItems
+const [,, fileName, command, elem, quantity] = process.argv;
+
+const readList = async (fileName) => {
+    try {
+        const data = await fs.readFile(fileName, 'utf8');
+        return JSON.parse(data);
+    } catch (error) {
+        return {};
+    }
 };
 
-async function main() {
-  const [,, filename, command, ...args] = process.argv;
+const writeList = async (fileName, data) => {
+    await fs.writeFile(fileName, JSON.stringify(data, null, 2));
+};
 
-  if (!filename || !command) {
-    return showHelp();
-  }
-
-  if (!commands[command]) {
-    console.error(`Unknown command: ${command}`);
-    return showHelp();
-  }
-
-  try {
-    await commands[command](filename, ...args);
-  } catch (error) {
-    console.error(`Error: ${error.message}`);
-  }
-}
-
-async function createFile(filename) {
-  if (path.extname(filename) !== '.json') {
-    throw new Error('File must have .json extension');
-  }
-  await fs.writeFile(filename, '{}');
-  console.log(`File ${filename} created successfully.`);
-}
-
-async function deleteFile(filename) {
-  await fs.unlink(filename);
-  console.log(`File ${filename} deleted successfully.`);
-}
-
-async function addItem(filename, item, quantity = '1') {
-  if (!item) {
-    throw new Error('No elem specified.');
-  }
-
-  const list = await readList(filename);
-  const parsedQuantity = parseInt(quantity);
-
-  if (isNaN(parsedQuantity)) {
-    list[item] = (list[item] || 0) + 1;
-  } else if (parsedQuantity < 0) {
-    await removeItem(filename, item, (-parsedQuantity).toString());
-    return;
-  } else {
-    list[item] = (list[item] || 0) + parsedQuantity;
-  }
-
-  await writeList(filename, list);
-  console.log(`Added ${quantity} ${item}(s) to the list.`);
-}
-
-async function removeItem(filename, item, quantity) {
-  if (!item) {
-    throw new Error('No elem specified.');
-  }
-
-  const list = await readList(filename);
-
-  if (!(item in list)) {
-    return;
-  }
-
-  if (!quantity) {
-    delete list[item];
-  } else {
-    const parsedQuantity = parseInt(quantity);
-    if (isNaN(parsedQuantity)) {
-      throw new Error('Unexpected request: nothing has been removed.');
-    } else if (parsedQuantity < 0) {
-      await addItem(filename, item, (-parsedQuantity).toString());
-      return;
+const printList = (list) => {
+    if (Object.keys(list).length === 0) {
+        console.log('Empty list.');
     } else {
-      list[item] -= parsedQuantity;
-      if (list[item] <= 0) {
-        delete list[item];
-      }
+        for (const [item, count] of Object.entries(list)) {
+            console.log(`- ${item} (${count})`);
+        }
     }
-  }
+};
 
-  await writeList(filename, list);
-  console.log(`Removed ${quantity || 'all'} ${item}(s) from the list.`);
-}
+const printHelp = () => {
+    console.log('Commands:');
+    console.log('- create: takes a filename as argument and create it (should have `.json` extension specified)');
+    console.log('- delete: takes a filename as argument and delete it');
+    console.log('- add: adds a new element to the list or increases its quantity');
+    console.log('- rm: removes an element from the list or decreases its quantity');
+    console.log('- ls: prints the current list');
+    console.log('- help: prints this help message');
+};
 
-function showHelp() {
-  console.log('Commands:');
-  console.log('- create: takes a filename as argument and create it (should have `.json` extension specified)');
-  console.log('- delete: takes a filename as argument and delete it');
-  console.log('- add: adds a new element to the list or updates an existing one');
-  console.log('- rm: removes an element from the list or reduces its quantity');
-  console.log('- help: shows this help message');
-  console.log('- ls: lists all items in the shopping list');
-}
-
-async function listItems(filename) {
-  const list = await readList(filename);
-  if (Object.keys(list).length === 0) {
-    console.log('Empty list.');
-  } else {
-    for (const [item, quantity] of Object.entries(list)) {
-      console.log(`- ${item} (${quantity})`);
+const main = async () => {
+    if (!fileName || !command) {
+        return printHelp();
     }
-  }
-}
 
-async function readList(filename) {
-  try {
-    const data = await fs.readFile(filename, 'utf8');
-    return JSON.parse(data);
-  } catch (error) {
-    if (error.code === 'ENOENT') {
-      return {};
+    switch (command) {
+        case 'create':
+            await fs.writeFile(fileName, '{}');
+            console.log(`File ${fileName} created.`);
+            break;
+
+        case 'delete':
+            await fs.unlink(fileName);
+            console.log(`File ${fileName} deleted.`);
+            break;
+
+        case 'add':
+        case 'rm':
+            if (!elem) {
+                console.log('No elem specified.');
+                return;
+            }
+
+            const list = await readList(fileName);
+            const num = parseInt(quantity) || 1;
+            const modifier = command === 'add' ? 1 : -1;
+
+            if (list[elem]) {
+                list[elem] += num * modifier;
+            } else if (command === 'add') {
+                list[elem] = num;
+            }
+
+            if (list[elem] <= 0) {
+                delete list[elem];
+            }
+
+            await writeList(fileName, list);
+            console.log(`Updated ${elem} in ${fileName}`);
+            break;
+
+        case 'ls':
+            const listToDisplay = await readList(fileName);
+            printList(listToDisplay);
+            break;
+
+        case 'help':
+            printHelp();
+            break;
+
+        default:
+            console.log('Unknown command. Use "help" to see available commands.');
     }
-    throw error;
-  }
-}
-
-async function writeList(filename, list) {
-  await fs.writeFile(filename, JSON.stringify(list, null, 2));
-}
+};
 
 main().catch(console.error);
